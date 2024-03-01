@@ -28,18 +28,23 @@ export const useRoundStore = create<IRoundStore>((set, get) => ({
     betCount: 0,
   },
   getBetCount: async (round: Round) => {
-    const { data: roundUsers, error } = await supabase
-      .from("round_users")
-      .select("bet")
-      .eq("round_id", round.id);
+    if (round) {
+      const { data: roundUsers, error } = await supabase
+        .from("round_users")
+        .select("bet")
+        .eq("round_id", round.id);
 
-    if (roundUsers) {
-      set(() => ({
-        state: {
-          ...get().state,
-          betCount: roundUsers.reduce((acc, user) => acc + (user.bet || 0), 0),
-        },
-      }));
+      if (roundUsers) {
+        set(() => ({
+          state: {
+            ...get().state,
+            betCount: roundUsers.reduce(
+              (acc, user) => acc + (user.bet || 0),
+              0
+            ),
+          },
+        }));
+      }
     }
   },
   createRoundUsers: async (round: Round, referencePlayerId: string) => {

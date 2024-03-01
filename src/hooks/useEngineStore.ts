@@ -77,27 +77,24 @@ export const useEngineStore = create<IEngineStore>((set, get) => ({
 
       tableSits.push(me);
 
-      let nextPlayer = get().getMatchUserByUserId(me.next_user!);
-      while (nextPlayer.user_id !== me.user_id) {
-        tableSits.push(nextPlayer);
-        nextPlayer = get().getMatchUserByUserId(nextPlayer.next_user!);
-      }
+      if (me.next_user) {
+        let nextPlayer = get().getMatchUserByUserId(me.next_user);
 
-      set({
-        state: {
-          ...get().state,
-          tableSits,
-        },
-      });
+        while (nextPlayer.user_id !== me.user_id) {
+          tableSits.push(nextPlayer);
+          nextPlayer = get().getMatchUserByUserId(nextPlayer.next_user!);
+        }
+
+        set({
+          state: {
+            ...get().state,
+            tableSits,
+          },
+        });
+      }
     }
   },
   handleBet: async (roundId: string, me: MatchUser, bet: number) => {
-    await supabase
-      .from("round_users")
-      .update({ bet, current: false })
-      .eq("round_id", roundId)
-      .eq("user_id", me.user_id);
-
     const nextPlayer = get().getMatchUserByUserId(me.next_user!);
     await supabase
       .from("round_users")
@@ -105,6 +102,11 @@ export const useEngineStore = create<IEngineStore>((set, get) => ({
       .eq("round_id", roundId)
       .eq("user_id", nextPlayer.user_id);
 
+    await supabase
+      .from("round_users")
+      .update({ bet, current: false })
+      .eq("round_id", roundId)
+      .eq("user_id", me.user_id);
     useRoundStore.getState().fetchCurrentPlayer();
   },
 }));

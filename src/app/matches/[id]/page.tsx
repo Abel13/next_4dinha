@@ -24,37 +24,38 @@ export default async function GamePage({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div className="flex flex-1 flex-col w-screen max-h-screen">
+    <main className="flex min-h-screen flex-col items-center">
       <div className="flex my-2 items-end justify-center">
         <TableSit position={3} />
       </div>
-
-      <div className="grid grid-cols-5 grid-rows-4 h-full">
-        <div className="flex-col m-2 z-10">
-          <div className="flex h-full items-end justify-end">
-            <TableSit position={2} />
+      <div className="flex flex-1 ">
+        <div className="grid grid-cols-5 grid-rows-3">
+          <div className="flex-col m-2 z-10">
+            <div className="flex h-full items-end justify-end">
+              <TableSit position={2} />
+            </div>
+          </div>
+          <Table me={me} />
+          <div className="flex-col m-2 z-10">
+            <div className="flex h-full items-end justify-start">
+              <TableSit position={4} />
+            </div>
+          </div>
+          <div />
+          <div />
+          <div className="flex-col m-2 z-10">
+            <div className="flex justify-end">
+              <TableSit position={1} />
+            </div>
+          </div>
+          <div className="flex-col m-2 z-10">
+            <div className="flex justify-start">
+              <TableSit position={5} />
+            </div>
           </div>
         </div>
-        <Table me={me} />
-        <div className="flex-col m-2 z-10">
-          <div className="flex h-full items-end justify-start">
-            <TableSit position={4} />
-          </div>
-        </div>
-        <div />
-        <div />
-        <div className="flex-col m-2 z-10">
-          <div className="flex justify-end">
-            <TableSit position={1} />
-          </div>
-        </div>
-        <div className="flex-col m-2 z-10">
-          <div className="flex justify-start">
-            <TableSit position={5} />
-          </div>
-        </div>
-        <Me me={me!} />
       </div>
-    </div>
+      <Me me={me!} />
+    </main>
   );
 }

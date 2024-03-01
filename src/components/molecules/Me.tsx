@@ -102,7 +102,7 @@ export default function Me({ me }: MeProps) {
 
   if (!me) {
     return (
-      <div className="flex col-span-5 rounded">
+      <div className="flex rounded">
         <div className="flex w-full flex-col border-t-2 rounded-md items-center p-1">
           Loading...
         </div>
@@ -111,69 +111,67 @@ export default function Me({ me }: MeProps) {
   }
 
   return (
-    <div className="flex col-span-5 rounded">
-      <div className="flex w-full flex-col border-t-2 rounded-md items-center justify-end p-1">
-        <div className="flex h-20 gap-1 justify-around">
-          {Array.from(Array(currentRound || 1)).map((_, index) => {
-            return <CardItem key={index} card={myCards[index]} />;
-          })}
+    <div className="flex w-full flex-col border-t-2 rounded-md items-center justify-end p-1">
+      <div className="flex h-20 gap-1 justify-around">
+        {Array.from(Array(currentRound || 1)).map((_, index) => {
+          return <CardItem key={index} card={myCards[index]} />;
+        })}
+      </div>
+      <div className="flex w-full justify-between items-center">
+        <div className="flex">
+          <div className="flex flex-1 flex-col items-center">
+            <Image
+              alt="Avatar"
+              src={`https://api.dicebear.com/7.x/bottts-neutral/png?seed=${me.user_id}&scale=90`}
+              width={50}
+              height={50}
+              className="rounded border-2"
+            />
+            {live > 0 && (
+              <div className="text-xs">{`${Array.from(Array(live))
+                .fill("❤️")
+                .join("")}${Array.from(Array(5 - live))
+                .fill("🤍")
+                .join("")}`}</div>
+            )}
+          </div>
+
+          <div className="flex w-5 h-5 border rounded bg-green-700 justify-center items-center text-xs">
+            <span>{bet}</span>
+          </div>
         </div>
-        <div className="flex w-full justify-between items-center">
-          <div className="flex">
-            <div className="flex flex-1 flex-col items-center">
-              <Image
-                alt="Avatar"
-                src={`https://api.dicebear.com/7.x/bottts-neutral/png?seed=${me.user_id}&scale=90`}
-                width={50}
-                height={50}
-                className="rounded border-2"
-              />
-              {live > 0 && (
-                <div className="text-xs">{`${Array.from(Array(live))
-                  .fill("❤️")
-                  .join("")}${Array.from(Array(5 - live))
-                  .fill("🤍")
-                  .join("")}`}</div>
-              )}
-            </div>
+        <div className={disabledStyle(dealer)}>
+          <span className="text-4xl">💼</span>
+          <span>dealer</span>
+        </div>
+        <div className={disabledStyle(currentPlayer?.user_id === me.user_id)}>
+          <div className="text-4xl">🎲</div>
+          <span>sua vez</span>
+        </div>
 
-            <div className="flex w-5 h-5 border rounded bg-green-700 justify-center items-center text-xs">
-              <span>{bet}</span>
-            </div>
-          </div>
-          <div className={disabledStyle(dealer)}>
-            <span className="text-4xl">💼</span>
-            <span>dealer</span>
-          </div>
-          <div className={disabledStyle(currentPlayer?.user_id === me.user_id)}>
-            <div className="text-4xl">🎲</div>
-            <span>sua vez</span>
-          </div>
-
-          <div className="flex flex-1 flex-col items-center justify-center">
-            {me?.dealer && !currentRound && (
-              <div className="flex flex-1 justify-center items-center">
-                <Button
-                  onClick={async () => {
-                    await handleDeal(me);
-                  }}
-                >
-                  Distribuir Cartas
-                </Button>
-              </div>
-            )}
-            {currentPlayer?.user_id === me.user_id && (
-              <Bet
-                betCount={betCount}
-                currentRound={currentRound?.number!}
-                checkLimit={me.dealer!}
-                handleBet={(bet) => {
-                  handleBet(currentRound?.id!, me, bet);
-                  setBet(bet);
+        <div className="flex flex-1 flex-col items-center justify-center">
+          {me?.dealer && !currentRound && (
+            <div className="flex flex-1 justify-center items-center">
+              <Button
+                onClick={async () => {
+                  await handleDeal(me);
                 }}
-              />
-            )}
-          </div>
+              >
+                Distribuir Cartas
+              </Button>
+            </div>
+          )}
+          {currentPlayer?.user_id === me.user_id && (
+            <Bet
+              betCount={betCount}
+              currentRound={currentRound?.number!}
+              checkLimit={me.dealer!}
+              handleBet={(bet) => {
+                handleBet(currentRound?.id!, me, bet);
+                setBet(bet);
+              }}
+            />
+          )}
         </div>
       </div>
     </div>

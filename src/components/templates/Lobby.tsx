@@ -53,7 +53,7 @@ export default function Lobby({
         .eq("user_id", userId);
     }
 
-    router.replace(`/matches/${match.id}`);
+    router.replace(`/starting/${match.id}`);
   }, [isOwner, lobby, match.id, router, userId]);
 
   const startMatch = useCallback(async () => {

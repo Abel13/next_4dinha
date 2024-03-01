@@ -11,6 +11,8 @@ import useTurn from "@/hooks/useTurn";
 export default function Table({ me }: { me: MatchUser }) {
   const {
     setCurrentRound,
+    setCurrentPlayer,
+    getBetCount,
     fetchCurrentRound,
     fetchCurrentPlayer,
     state: { currentRound },
@@ -21,6 +23,8 @@ export default function Table({ me }: { me: MatchUser }) {
 
   useEffect(() => {
     if (currentRound?.number === 1) fillFirstRoundCards(currentRound.id);
+    fetchCurrentPlayer();
+    getBetCount(currentRound!);
   }, [currentRound]);
 
   useEffect(() => {
