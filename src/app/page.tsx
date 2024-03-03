@@ -1,6 +1,5 @@
 import Image from "next/image";
 import logo from "@/assets/logo.png";
-import Login from "@/components/templates/Login";
 import Home from "@/components/templates/Home";
 
 export default function ServerLogin() {

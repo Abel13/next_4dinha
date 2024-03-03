@@ -1,6 +1,5 @@
 import Table from "@/components/molecules/Table";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import Image from "next/image";
 import { cookies } from "next/headers";
 import Me from "@/components/molecules/Me";
 import { MatchUser } from "@/models/MatchUser";

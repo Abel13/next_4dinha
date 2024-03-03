@@ -5,14 +5,18 @@ import { Round } from "@/models/Round";
 import { RoundUser } from "@/models/RoundUser";
 import { create } from "zustand";
 import { useEngineStore } from "./useEngineStore";
+import { RoundUserCard } from "@/models/RoundUserCard";
 
 interface IRoundStore {
   state: {
     currentRound: Round | null;
     currentPlayer: RoundUser | null;
+    playerBets: { [key: string]: number };
     betCount: number;
+    myCards: RoundUserCard[];
   };
   createRoundUsers: (round: Round, referencePlayerId: string) => Promise<void>;
+  getMyCards: (currentRound: Round, me: MatchUser) => Promise<void>;
   handleDeal: (referencePlayer: MatchUser) => void;
   fetchCurrentRound: (matchId: string) => void;
   fetchCurrentPlayer: () => void;
@@ -26,12 +30,46 @@ export const useRoundStore = create<IRoundStore>((set, get) => ({
     currentPlayer: null,
     currentRound: null,
     betCount: 0,
+    playerBets: {},
+    myCards: [],
+  },
+
+  getMyCards: async (currentRound, me) => {
+    let cards: RoundUserCard[];
+    if (currentRound.number === 1) {
+      cards = [
+        {
+          card: 0,
+          id: "",
+          created_at: "",
+          round_id: currentRound.id,
+          user_id: me.user_id,
+        },
+      ];
+    } else {
+      const { data, error } = await supabase
+        .from("round_user_cards")
+        .select("*")
+        .eq("round_id", currentRound.id)
+        .eq("user_id", me.user_id);
+
+      if (data) {
+        cards = data;
+      }
+    }
+
+    set(() => ({
+      state: {
+        ...get().state,
+        myCards: cards,
+      },
+    }));
   },
   getBetCount: async (round: Round) => {
     if (round) {
       const { data: roundUsers, error } = await supabase
         .from("round_users")
-        .select("bet")
+        .select("*")
         .eq("round_id", round.id);
 
       if (roundUsers) {
@@ -41,6 +79,13 @@ export const useRoundStore = create<IRoundStore>((set, get) => ({
             betCount: roundUsers.reduce(
               (acc, user) => acc + (user.bet || 0),
               0
+            ),
+            playerBets: roundUsers.reduce(
+              (acc, user) => ({
+                ...acc,
+                [user.user_id]: user.bet,
+              }),
+              {}
             ),
           },
         }));
@@ -93,7 +138,6 @@ export const useRoundStore = create<IRoundStore>((set, get) => ({
         body: JSON.stringify(roundUsers),
       });
       const data = await resposta.json();
-      get().fetchCurrentPlayer();
       get().fetchCurrentRound(round.match_id);
     } catch (error) {}
   },
@@ -107,7 +151,7 @@ export const useRoundStore = create<IRoundStore>((set, get) => ({
 
     const roundNumber = (rounds?.length || 0) + 1;
 
-    if (rounds?.every((round) => round.done)) {
+    if (rounds?.every((round) => round.status === "finished")) {
       const { data } = await supabase
         .from("rounds")
         .insert({
@@ -121,7 +165,8 @@ export const useRoundStore = create<IRoundStore>((set, get) => ({
         get().createRoundUsers(data[0], referencePlayer.next_user!);
       }
     } else {
-      const currentRound = rounds?.find((round) => !round.done) || null;
+      const currentRound =
+        rounds?.find((round) => round.status !== "finished") || null;
       get().setCurrentRound(currentRound);
     }
   },
@@ -130,22 +175,27 @@ export const useRoundStore = create<IRoundStore>((set, get) => ({
       .from("rounds")
       .select("*")
       .eq("match_id", matchId)
-      .eq("done", false)
+      .neq("status", "finished")
       .single();
 
     if (round) {
       get().setCurrentRound(round);
+      get().fetchCurrentPlayer();
     }
   },
   fetchCurrentPlayer: async () => {
-    const { data: roundUser } = await supabase
-      .from("round_users")
-      .select("*")
-      .eq("current", true)
-      .single();
+    const roundId = get().state.currentRound?.id;
+    if (roundId) {
+      const { data: roundUser } = await supabase
+        .from("round_users")
+        .select("*")
+        .eq("current", true)
+        .eq("round_id", roundId)
+        .single();
 
-    if (roundUser) {
-      get().setCurrentPlayer(roundUser);
+      if (roundUser) {
+        get().setCurrentPlayer(roundUser);
+      }
     }
   },
   setCurrentPlayer: (currentPlayer) => {

@@ -2,11 +2,10 @@
 import Image from "next/image";
 import { Button } from "../atoms/Button";
 import { MatchUser } from "@/models/MatchUser";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { supabase } from "@/config/supabase";
 import CardItem from "../atoms/Card";
 import useCard from "@/hooks/useCard";
-import { Card } from "@/models/Card";
 import { useEngineStore } from "@/hooks/useEngineStore";
 import { useRoundStore } from "@/hooks/useRoundStore";
 import Bet from "./Bet";
@@ -18,23 +17,23 @@ interface MeProps {
 
 export default function Me({ me }: MeProps) {
   const {
-    getMyCards,
     handleBet,
     state: { matchUsers },
     fillSits,
     fetchMatchUsers,
   } = useEngineStore((store) => store);
   const {
-    state: { currentRound, currentPlayer, betCount },
+    state: { currentRound, currentPlayer, betCount, playerBets, myCards },
+    getMyCards,
     handleDeal,
     setCurrentPlayer,
     getBetCount,
+    fetchCurrentRound,
   } = useRoundStore((store) => store);
   const { getCard } = useCard();
   const [dealer, setDealer] = useState(!!me?.dealer);
   const [live, setLive] = useState(me?.lives || 0);
-  const [myCards, setMyCards] = useState<Card[]>([]);
-  const [bet, setBet] = useState(0);
+  const myTurn = currentPlayer?.user_id === me?.user_id;
 
   const disabledStyle = (disabled: boolean) =>
     disabled
@@ -68,6 +67,7 @@ export default function Me({ me }: MeProps) {
           filter: `round_id=eq.${currentRound?.id}`,
         },
         (payload) => {
+          fetchCurrentRound(me?.match_id!);
           setCurrentPlayer(payload.new as RoundUser);
           getBetCount(currentRound!);
         }
@@ -80,6 +80,7 @@ export default function Me({ me }: MeProps) {
   }, [
     currentRound,
     currentRound?.id,
+    fetchCurrentRound,
     getBetCount,
     getCard,
     me?.match_id,
@@ -87,6 +88,10 @@ export default function Me({ me }: MeProps) {
     myCards,
     setCurrentPlayer,
   ]);
+
+  useEffect(() => {
+    if (currentRound && me) getMyCards(currentRound, me);
+  }, [currentRound]);
 
   useEffect(() => {
     if (me && matchUsers.length > 0) {
@@ -114,7 +119,15 @@ export default function Me({ me }: MeProps) {
     <div className="flex w-full flex-col border-t-2 rounded-md items-center justify-end p-1">
       <div className="flex h-20 gap-1 justify-around">
         {Array.from(Array(currentRound || 1)).map((_, index) => {
-          return <CardItem key={index} card={myCards[index]} />;
+          return (
+            <CardItem
+              key={index}
+              card={getCard(myCards[index]?.card)}
+              turnDown={currentRound?.number === 1}
+              allowPlay={myTurn}
+              highlight={myTurn && currentRound?.status === "play"}
+            />
+          );
         })}
       </div>
       <div className="flex w-full justify-between items-center">
@@ -137,14 +150,14 @@ export default function Me({ me }: MeProps) {
           </div>
 
           <div className="flex w-5 h-5 border rounded bg-green-700 justify-center items-center text-xs">
-            <span>{bet}</span>
+            <span>{playerBets[me.user_id]}</span>
           </div>
         </div>
         <div className={disabledStyle(dealer)}>
           <span className="text-4xl">💼</span>
           <span>dealer</span>
         </div>
-        <div className={disabledStyle(currentPlayer?.user_id === me.user_id)}>
+        <div className={disabledStyle(myTurn)}>
           <div className="text-4xl">🎲</div>
           <span>sua vez</span>
         </div>
@@ -161,14 +174,13 @@ export default function Me({ me }: MeProps) {
               </Button>
             </div>
           )}
-          {currentPlayer?.user_id === me.user_id && (
+          {myTurn && currentRound?.status === "bet" && (
             <Bet
               betCount={betCount}
               currentRound={currentRound?.number!}
               checkLimit={me.dealer!}
               handleBet={(bet) => {
-                handleBet(currentRound?.id!, me, bet);
-                setBet(bet);
+                handleBet(currentRound!, me, bet);
               }}
             />
           )}

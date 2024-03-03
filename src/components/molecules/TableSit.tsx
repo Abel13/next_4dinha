@@ -10,7 +10,7 @@ export default function TableSit({ position }: { position: number }) {
     state: { tableSits },
   } = useEngineStore((store) => store);
   const {
-    state: { currentPlayer },
+    state: { currentPlayer, playerBets },
   } = useRoundStore((store) => store);
   const [player, setPlayer] = useState<MatchUser | null>(null);
 
@@ -41,7 +41,7 @@ export default function TableSit({ position }: { position: number }) {
         </div>
         {true && (
           <div className="flex w-4 h-4 border rounded bg-green-700 justify-center items-center text-xs">
-            <span>0</span>
+            <span>{playerBets[player.user_id]}</span>
           </div>
         )}
       </div>

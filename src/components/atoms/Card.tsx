@@ -1,13 +1,23 @@
+"use client";
 import logo from "@/assets/icon.png";
 import { Card, CardSuit, CardSymbol, SuitSymbol } from "@/models/Card";
 import Image from "next/image";
+import { useState } from "react";
 
 interface CardProps {
   card?: Card;
   turnDown?: boolean;
+  highlight?: boolean;
+  allowPlay?: boolean;
 }
 
-export default function CardItem({ card, turnDown }: CardProps) {
+export default function CardItem({
+  card,
+  turnDown,
+  highlight,
+  allowPlay,
+}: CardProps) {
+  const [effect, setEffect] = useState(false);
   const symbol = (suit: CardSuit) => {
     return SuitSymbol[CardSuit[suit] as keyof typeof SuitSymbol];
   };
@@ -26,7 +36,17 @@ export default function CardItem({ card, turnDown }: CardProps) {
 
   if (turnDown)
     return (
-      <div className="w-14 h-20 rounded-lg shadow-md flex flex-col justify-center border p-2 bg-white">
+      <div
+        onClick={() => {
+          if (!allowPlay) setEffect(true);
+        }}
+        onAnimationEnd={() => setEffect(false)}
+        className={`${
+          effect && "animate-wiggle"
+        } hover:bg-gray-200 hover:shadow-xl w-14 h-20 rounded-lg shadow-md flex flex-col justify-center p-2 bg-white ${
+          highlight && "border-2 border-green-500"
+        }`}
+      >
         <Image
           className="relative"
           src={logo}

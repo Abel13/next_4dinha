@@ -1,10 +1,8 @@
 import { supabase } from "@/config/supabase";
 import { MatchUser } from "@/models/MatchUser";
 import { Round } from "@/models/Round";
-import { RoundUserCard } from "@/models/RoundUserCard";
 import { create } from "zustand";
 import { useRoundStore } from "./useRoundStore";
-import useTurn from "./useTurn";
 
 export interface IEngineStore {
   state: {
@@ -12,10 +10,10 @@ export interface IEngineStore {
     matchUsers: MatchUser[];
   };
   fetchMatchUsers: (matchId: string) => void;
-  getMyCards: (currentRound: Round, me: MatchUser) => Promise<RoundUserCard[]>;
   getMatchUserByUserId: (id: string) => MatchUser;
   fillSits: (me: MatchUser) => void;
-  handleBet: (roundId: string, me: MatchUser, bet: number) => void;
+  handleBet: (round: Round, me: MatchUser, bet: number) => void;
+  handlePlay: (roundId: string, me: MatchUser, card: number) => void;
 }
 
 export const useEngineStore = create<IEngineStore>((set, get) => ({
@@ -42,27 +40,6 @@ export const useEngineStore = create<IEngineStore>((set, get) => ({
         },
       });
     }
-  },
-  getMyCards: async (currentRound, me) => {
-    if (currentRound.number === 1) {
-      const cards: RoundUserCard[] = [
-        {
-          card: 0,
-          id: "",
-          created_at: "",
-          round_id: currentRound.id,
-          user_id: me.user_id,
-        },
-      ];
-
-      return cards;
-    }
-    const { data, error } = await supabase
-      .from("round_user_cards")
-      .select("*")
-      .eq("round_id", currentRound.id)
-      .eq("user_id", me.user_id);
-    return data || [];
   },
   getMatchUserByUserId: (id) => {
     const matchUser = get().state.matchUsers.find(
@@ -94,19 +71,29 @@ export const useEngineStore = create<IEngineStore>((set, get) => ({
       }
     }
   },
-  handleBet: async (roundId: string, me: MatchUser, bet: number) => {
+  handleBet: async (round, me, bet) => {
     const nextPlayer = get().getMatchUserByUserId(me.next_user!);
+
     await supabase
       .from("round_users")
       .update({ current: true })
-      .eq("round_id", roundId)
+      .eq("round_id", round.id)
       .eq("user_id", nextPlayer.user_id);
 
     await supabase
       .from("round_users")
       .update({ bet, current: false })
-      .eq("round_id", roundId)
+      .eq("round_id", round.id)
       .eq("user_id", me.user_id);
+
     useRoundStore.getState().fetchCurrentPlayer();
+
+    if (me.dealer) {
+      await supabase
+        .from("rounds")
+        .update({ status: "play" })
+        .eq("id", round.id);
+    }
   },
+  handlePlay: async (roundId: string, me: MatchUser, card?: number) => {},
 }));

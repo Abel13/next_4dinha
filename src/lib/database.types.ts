@@ -181,7 +181,7 @@ export type Database = {
           match_id: string;
           number: number;
           trump: number | null;
-          done: boolean;
+          status: Database["public"]["Enums"]["round_status"];
         };
         Insert: {
           created_at?: string;
@@ -189,7 +189,7 @@ export type Database = {
           match_id: string;
           number: number;
           trump?: number | null;
-          done?: boolean;
+          status?: Database["public"]["Enums"]["round_status"];
         };
         Update: {
           created_at?: string;
@@ -197,7 +197,7 @@ export type Database = {
           match_id?: string;
           number?: number;
           trump?: number | null;
-          done?: boolean;
+          status?: Database["public"]["Enums"]["round_status"];
         };
         Relationships: [
           {
@@ -300,6 +300,7 @@ export type Database = {
     };
     Enums: {
       match_status: "created" | "started" | "finished";
+      round_status: "bet" | "play" | "finished";
     };
     CompositeTypes: {
       [_ in never]: never;

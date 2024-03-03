@@ -7,6 +7,9 @@ import { Match } from "@/models/Match";
 
 export default async function ServerMatches() {
   const supabase = createServerComponentClient({ cookies });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const { data } = await supabase
     .from("matches")
     .select("*")
@@ -25,8 +28,21 @@ export default async function ServerMatches() {
           priority
         />
       </div>
+
       <div className="flex flex-col w-full">
-        <span className="border-b  mb-2">Partidas</span>
+        <div className="flex items-end mb-3">
+          <Image
+            alt="Avatar"
+            src={`https://api.dicebear.com/7.x/bottts-neutral/png?seed=${user?.id}&scale=90`}
+            width={50}
+            height={50}
+            className="rounded mr-2"
+          />
+          <span className="text-gray-400 text-sm">{user?.email}</span>
+        </div>
+        <span className="border-b-2  mb-2 font-semibold font-sans">
+          Partidas
+        </span>
         <Matches matchList={data || []} />
       </div>
     </main>

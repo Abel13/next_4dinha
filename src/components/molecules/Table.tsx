@@ -65,44 +65,70 @@ export default function Table({ me }: { me: MatchUser }) {
   return (
     <div className="col-span-3 grid grid-cols-3 grid-rows-4 w-full h-full row-span-3 bg-stone-800 rounded-full border-2 border-stone-500">
       <div className="flex flex-1 rotate-180 justify-center items-end col-span-3">
-        <CardItem card={tableCards[3] && getCard(tableCards[3].card)} />
+        {tableCards[3] ? (
+          <CardItem card={getCard(tableCards[3].card)} />
+        ) : (
+          <div className="flex border border-gray-700 w-14 h-20 rounded items-center justify-center" />
+        )}
       </div>
       <div className="flex items-start justify-start">
         <div className="rotate-90 mx-1">
-          <CardItem card={tableCards[2] && getCard(tableCards[2]?.card)} />
+          {tableCards[2] ? (
+            <CardItem card={getCard(tableCards[2]?.card)} />
+          ) : (
+            <div className="flex border border-gray-700 w-14 h-20 rounded items-center justify-center" />
+          )}
         </div>
       </div>
       <div className="border rounded-lg flex bg-slate-800 border-slate-600 row-span-2">
         <div className="flex flex-1 items-center justify-center">
-          <CardItem
-            card={currentRound?.trump ? getCard(currentRound.trump) : undefined}
-          />
+          {currentRound?.trump ? (
+            <CardItem card={getCard(currentRound.trump)} />
+          ) : (
+            <div className="flex border border-gray-700 w-14 h-20 rounded items-center justify-center" />
+          )}
         </div>
       </div>
       <div className="flex items-start justify-end">
         <div className="-rotate-90 mx-1">
-          <CardItem card={tableCards[4] && getCard(tableCards[4]?.card)} />
+          {tableCards[4] ? (
+            <CardItem card={getCard(tableCards[4]?.card)} />
+          ) : (
+            <div className="flex border border-gray-700 w-14 h-20 rounded items-center justify-center" />
+          )}
         </div>
       </div>
       <div className="flex items-end justify-start">
         <div className="rotate-90 mx-1">
-          <CardItem card={tableCards[1] && getCard(tableCards[1]?.card)} />
+          {tableCards[1] ? (
+            <CardItem card={getCard(tableCards[1]?.card)} />
+          ) : (
+            <div className="flex border border-gray-700 w-14 h-20 rounded items-center justify-center" />
+          )}
         </div>
       </div>
 
       <div className="flex items-end justify-end">
-        <div className="-rotate-90 mx-1">
-          <CardItem card={tableCards[5] && getCard(tableCards[5]?.card)} />
+        <div className="-rotate-90 mx-1 ">
+          {tableCards[5] ? (
+            <CardItem card={getCard(tableCards[5]?.card)} />
+          ) : (
+            <div className="flex border border-gray-700 w-14 h-20 rounded items-center justify-center" />
+          )}
         </div>
       </div>
       <div />
       <div className="flex items-end justify-center">
-        <div className="">
+        {tableCards[0]?.card !== 0 ? (
           <CardItem
-            card={tableCards[0] && getCard(tableCards[0]?.card)}
-            turnDown={currentRound?.number === 1}
+            card={getCard(tableCards[0]?.card)}
+            highlight={
+              currentRound?.number === 1 && currentRound.status === "play"
+            }
           />
-        </div>
+        ) : (
+          <div className="flex border border-gray-700 w-14 h-20 rounded items-center justify-center" />
+        )}
       </div>
       <div />
     </div>
