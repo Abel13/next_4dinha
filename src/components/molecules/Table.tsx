@@ -6,7 +6,7 @@ import { supabase } from "@/config/supabase";
 import { Round } from "@/models/Round";
 import useCard from "@/hooks/useCard";
 import { useRoundStore } from "@/hooks/useRoundStore";
-import useTurn from "@/hooks/useTurn";
+import useRoundNumberOne from "@/hooks/useTurn";
 
 export default function Table({ me }: { me: MatchUser }) {
   const {
@@ -18,7 +18,7 @@ export default function Table({ me }: { me: MatchUser }) {
     state: { currentRound },
   } = useRoundStore((store) => store);
 
-  const { fillFirstRoundCards, tableCards } = useTurn();
+  const { fillFirstRoundCards, tableCards } = useRoundNumberOne();
   const { getCard } = useCard();
 
   useEffect(() => {

@@ -1,14 +1,12 @@
 import { supabase } from "@/config/supabase";
-import { RoundUser } from "@/models/RoundUser";
 import { RoundUserCard } from "@/models/RoundUserCard";
 import { useEngineStore } from "./useEngineStore";
 import { useState } from "react";
 
-export default function useTurn() {
+export default function useRoundNumberOne() {
   const {
     state: { tableSits },
     getMatchUserByUserId,
-    fillSits,
   } = useEngineStore((store) => store);
   const [tableCards, setTableCards] = useState<RoundUserCard[]>([]);
 

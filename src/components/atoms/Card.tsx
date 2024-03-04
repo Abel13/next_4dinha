@@ -9,6 +9,7 @@ interface CardProps {
   turnDown?: boolean;
   highlight?: boolean;
   allowPlay?: boolean;
+  handlePlay?: (card: Card) => void;
 }
 
 export default function CardItem({
@@ -16,6 +17,7 @@ export default function CardItem({
   turnDown,
   highlight,
   allowPlay,
+  handlePlay,
 }: CardProps) {
   const [effect, setEffect] = useState(false);
   const symbol = (suit: CardSuit) => {
@@ -39,6 +41,7 @@ export default function CardItem({
       <div
         onClick={() => {
           if (!allowPlay) setEffect(true);
+          else handlePlay && handlePlay(card);
         }}
         onAnimationEnd={() => setEffect(false)}
         className={`${

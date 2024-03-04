@@ -3,6 +3,7 @@ import { MatchUser } from "@/models/MatchUser";
 import { Round } from "@/models/Round";
 import { create } from "zustand";
 import { useRoundStore } from "./useRoundStore";
+import { Card } from "@/models/Card";
 
 export interface IEngineStore {
   state: {
@@ -13,7 +14,6 @@ export interface IEngineStore {
   getMatchUserByUserId: (id: string) => MatchUser;
   fillSits: (me: MatchUser) => void;
   handleBet: (round: Round, me: MatchUser, bet: number) => void;
-  handlePlay: (roundId: string, me: MatchUser, card: number) => void;
 }
 
 export const useEngineStore = create<IEngineStore>((set, get) => ({
@@ -86,14 +86,10 @@ export const useEngineStore = create<IEngineStore>((set, get) => ({
       .eq("round_id", round.id)
       .eq("user_id", me.user_id);
 
-    useRoundStore.getState().fetchCurrentPlayer();
-
     if (me.dealer) {
-      await supabase
-        .from("rounds")
-        .update({ status: "play" })
-        .eq("id", round.id);
+      useRoundStore.getState().createTurn();
     }
+
+    useRoundStore.getState().fetchCurrentPlayer();
   },
-  handlePlay: async (roundId: string, me: MatchUser, card?: number) => {},
 }));

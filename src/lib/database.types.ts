@@ -250,31 +250,24 @@ export type Database = {
       };
       user_turn: {
         Row: {
-          card_id: string;
+          card: number;
           created_at: string;
           turn_id: string;
           user_id: string;
         };
         Insert: {
-          card_id: string;
+          card: number;
           created_at?: string;
           turn_id: string;
           user_id: string;
         };
         Update: {
-          card_id?: string;
+          card?: number;
           created_at?: string;
           turn_id?: string;
           user_id?: string;
         };
         Relationships: [
-          {
-            foreignKeyName: "public_user_turn_card_id_fkey";
-            columns: ["card_id"];
-            isOneToOne: false;
-            referencedRelation: "round_user_cards";
-            referencedColumns: ["id"];
-          },
           {
             foreignKeyName: "public_user_turn_turn_id_fkey";
             columns: ["turn_id"];

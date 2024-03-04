@@ -402,6 +402,7 @@ export default function useCard() {
   const shuffledCards = () => {
     const shuffle = cards
       .filter((c) => c.symbol !== CardSymbol.Hide)
+      .sort(() => Math.random() - 0.5)
       .sort(() => Math.random() - 0.5);
     return shuffle;
   };

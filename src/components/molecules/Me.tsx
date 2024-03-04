@@ -18,9 +18,9 @@ interface MeProps {
 export default function Me({ me }: MeProps) {
   const {
     handleBet,
-    state: { matchUsers },
     fillSits,
     fetchMatchUsers,
+    state: { matchUsers },
   } = useEngineStore((store) => store);
   const {
     state: { currentRound, currentPlayer, betCount, playerBets, myCards },
@@ -29,6 +29,8 @@ export default function Me({ me }: MeProps) {
     setCurrentPlayer,
     getBetCount,
     fetchCurrentRound,
+    fetchCurrentTurn,
+    handlePlay,
   } = useRoundStore((store) => store);
   const { getCard } = useCard();
   const [dealer, setDealer] = useState(!!me?.dealer);
@@ -67,9 +69,9 @@ export default function Me({ me }: MeProps) {
           filter: `round_id=eq.${currentRound?.id}`,
         },
         (payload) => {
-          fetchCurrentRound(me?.match_id!);
           setCurrentPlayer(payload.new as RoundUser);
           getBetCount(currentRound!);
+          fetchCurrentRound(me?.match_id!);
         }
       )
       .subscribe();
@@ -81,6 +83,7 @@ export default function Me({ me }: MeProps) {
     currentRound,
     currentRound?.id,
     fetchCurrentRound,
+    fetchCurrentTurn,
     getBetCount,
     getCard,
     me?.match_id,
@@ -92,6 +95,12 @@ export default function Me({ me }: MeProps) {
   useEffect(() => {
     if (currentRound && me) getMyCards(currentRound, me);
   }, [currentRound]);
+
+  useEffect(() => {
+    if (me && playerBets[me.user_id] && myTurn) {
+      fetchCurrentTurn(currentRound!.id);
+    }
+  }, [playerBets]);
 
   useEffect(() => {
     if (me && matchUsers.length > 0) {
@@ -126,6 +135,7 @@ export default function Me({ me }: MeProps) {
               turnDown={currentRound?.number === 1}
               allowPlay={myTurn}
               highlight={myTurn && currentRound?.status === "play"}
+              handlePlay={(card) => handlePlay(me, card)}
             />
           );
         })}
@@ -174,16 +184,18 @@ export default function Me({ me }: MeProps) {
               </Button>
             </div>
           )}
-          {myTurn && currentRound?.status === "bet" && (
-            <Bet
-              betCount={betCount}
-              currentRound={currentRound?.number!}
-              checkLimit={me.dealer!}
-              handleBet={(bet) => {
-                handleBet(currentRound!, me, bet);
-              }}
-            />
-          )}
+          {myTurn &&
+            currentRound?.status === "bet" &&
+            !playerBets[me.user_id] && (
+              <Bet
+                betCount={betCount}
+                currentRound={currentRound?.number!}
+                checkLimit={me.dealer!}
+                handleBet={(bet) => {
+                  handleBet(currentRound!, me, bet);
+                }}
+              />
+            )}
         </div>
       </div>
     </div>

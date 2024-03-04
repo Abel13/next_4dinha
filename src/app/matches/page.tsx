@@ -4,6 +4,7 @@ import logo from "@/assets/logo.png";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { Match } from "@/models/Match";
+import { Button } from "@/components/atoms/Button";
 
 export default async function ServerMatches() {
   const supabase = createServerComponentClient({ cookies });
@@ -40,9 +41,14 @@ export default async function ServerMatches() {
           />
           <span className="text-gray-400 text-sm">{user?.email}</span>
         </div>
-        <span className="border-b-2  mb-2 font-semibold font-sans">
-          Partidas
-        </span>
+        <div>
+          <span className="border-b-2  mb-2 font-semibold font-sans">
+            Partidas
+          </span>
+          <Button href="/matches/create" className="mb-2">
+            Criar Partida
+          </Button>
+        </div>
         <Matches matchList={data || []} />
       </div>
     </main>
