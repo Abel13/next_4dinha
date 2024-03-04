@@ -1,25 +1,30 @@
 import { supabase } from "@/config/supabase";
 import { MatchUser } from "@/models/MatchUser";
 import { Round } from "@/models/Round";
+import { UserTurn } from "@/models/UserTurn";
 import { create } from "zustand";
 import { useRoundStore } from "./useRoundStore";
-import { Card } from "@/models/Card";
 
 export interface IEngineStore {
   state: {
     tableSits: MatchUser[];
+    tableCards: { [key: string]: number };
     matchUsers: MatchUser[];
   };
   fetchMatchUsers: (matchId: string) => void;
+  fetchTableCards: (roundId: string) => Promise<void>;
   getMatchUserByUserId: (id: string) => MatchUser;
   fillSits: (me: MatchUser) => void;
   handleBet: (round: Round, me: MatchUser, bet: number) => void;
+  setTableCards: (cards: { [playerId: string]: number }) => void;
+  playCard: (me: MatchUser, cardId: number) => void;
 }
 
 export const useEngineStore = create<IEngineStore>((set, get) => ({
   state: {
     tableSits: [],
     matchUsers: [],
+    tableCards: {},
   },
   fetchMatchUsers: async (matchId) => {
     const { data: matchUsers, error } = await supabase
@@ -91,5 +96,53 @@ export const useEngineStore = create<IEngineStore>((set, get) => ({
     }
 
     useRoundStore.getState().fetchCurrentPlayer();
+  },
+  setTableCards: (cards) => {
+    set({
+      state: {
+        ...get().state,
+        tableCards: cards,
+      },
+    });
+  },
+  playCard: (me, cardId) => {
+    const cards = {
+      ...get().state.tableCards,
+      [me.user_id]: cardId,
+    };
+
+    set({
+      state: {
+        ...get().state,
+        tableCards: cards,
+      },
+    });
+  },
+  fetchTableCards: async (roundId) => {
+    const currentTurn = await useRoundStore
+      .getState()
+      .fetchCurrentTurn(roundId)!;
+    if (!currentTurn) {
+      return;
+    }
+    const { data: tableCards } = await supabase
+      .from("user_turn")
+      .select("*")
+      .eq("turn_id", currentTurn.id!);
+
+    console.log("tableCards", tableCards);
+    if (tableCards) {
+      let cards = get().state.tableCards;
+      tableCards.forEach((element: UserTurn) => {
+        cards[element.user_id] = element.card;
+      });
+
+      set({
+        state: {
+          ...get().state,
+          tableCards: cards,
+        },
+      });
+    }
   },
 }));

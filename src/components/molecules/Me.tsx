@@ -20,6 +20,7 @@ export default function Me({ me }: MeProps) {
     handleBet,
     fillSits,
     fetchMatchUsers,
+    fetchTableCards,
     state: { matchUsers },
   } = useEngineStore((store) => store);
   const {
@@ -72,6 +73,7 @@ export default function Me({ me }: MeProps) {
           setCurrentPlayer(payload.new as RoundUser);
           getBetCount(currentRound!);
           fetchCurrentRound(me?.match_id!);
+          fetchTableCards(currentRound!.id);
         }
       )
       .subscribe();
@@ -84,6 +86,7 @@ export default function Me({ me }: MeProps) {
     currentRound?.id,
     fetchCurrentRound,
     fetchCurrentTurn,
+    fetchTableCards,
     getBetCount,
     getCard,
     me?.match_id,
@@ -97,7 +100,8 @@ export default function Me({ me }: MeProps) {
   }, [currentRound]);
 
   useEffect(() => {
-    if (me && playerBets[me.user_id] && myTurn) {
+    console.log("playerBets", playerBets[me!.user_id]);
+    if (me && playerBets[me.user_id] !== null && myTurn) {
       fetchCurrentTurn(currentRound!.id);
     }
   }, [playerBets]);
@@ -186,7 +190,7 @@ export default function Me({ me }: MeProps) {
           )}
           {myTurn &&
             currentRound?.status === "bet" &&
-            !playerBets[me.user_id] && (
+            playerBets[me.user_id] === null && (
               <Bet
                 betCount={betCount}
                 currentRound={currentRound?.number!}

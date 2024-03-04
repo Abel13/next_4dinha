@@ -14,7 +14,6 @@ interface IRoundStore {
   state: {
     currentRound: Round | null;
     currentPlayer: RoundUser | null;
-    currentTurn: Turn | null;
     playerBets: { [key: string]: number };
     betCount: number;
     myCards: RoundUserCard[];
@@ -25,8 +24,8 @@ interface IRoundStore {
   handlePlay: (me: MatchUser, card: Card) => Promise<void>;
   fetchCurrentRound: (matchId: string) => void;
   fetchCurrentPlayer: () => void;
-  fetchCurrentTurn: (roundId: string) => Promise<void>;
-  setCurrentPlayer: (currentPlayer: RoundUser) => void;
+  fetchCurrentTurn: (roundId: string) => Promise<Turn | null>;
+  setCurrentPlayer: (currentPlayer: RoundUser | null) => void;
   setCurrentRound: (currentRound: Round | null) => void;
   getBetCount: (round: Round) => void;
   createTurn: () => Promise<void>;
@@ -201,6 +200,8 @@ export const useRoundStore = create<IRoundStore>((set, get) => ({
 
       if (roundUser) {
         get().setCurrentPlayer(roundUser);
+      } else {
+        get().setCurrentPlayer(null);
       }
     }
   },
@@ -275,18 +276,10 @@ export const useRoundStore = create<IRoundStore>((set, get) => ({
       .limit(1)
       .maybeSingle();
 
-    if (turn) {
-      set(() => ({
-        state: {
-          ...get().state,
-          currentTurn: turn,
-        },
-      }));
-    }
+    return turn;
   },
   handlePlay: async (me, card) => {
     let cardId = card.id;
-    console.log(cardId);
 
     if (cardId === 0) {
       const { data: firstCard } = await supabase
@@ -296,38 +289,46 @@ export const useRoundStore = create<IRoundStore>((set, get) => ({
         .eq("user_id", me.user_id)
         .single();
 
-      console.log(firstCard);
       if (firstCard) cardId = firstCard?.card;
     }
 
+    const turn = await get().fetchCurrentTurn(get().state.currentRound?.id!)!;
     const userTurn: UserTurn = {
       card: cardId,
-      turn_id: get().state.currentTurn?.id!,
+      turn_id: turn!.id,
       user_id: me.user_id,
     } as UserTurn;
-    console.log(userTurn);
-    // await supabase.from("user_turn").insert(userTurn);
+    const { data: newTurn } = await supabase
+      .from("user_turn")
+      .insert(userTurn)
+      .select("*");
 
-    // const nextPlayer = useEngineStore
-    //   .getState()
-    //   .getMatchUserByUserId(me.next_user!);
+    if (newTurn) {
+      useEngineStore.getState().playCard(me, cardId);
 
-    // await supabase
-    //   .from("round_users")
-    //   .update({
-    //     current: true,
-    //   })
-    //   .eq("round_id", round.id)
-    //   .eq("user_id", nextPlayer.user_id);
+      const nextPlayer = useEngineStore
+        .getState()
+        .getMatchUserByUserId(me.next_user!);
 
-    // await supabase
-    //   .from("round_users")
-    //   .update({
-    //     current: false,
-    //   })
-    //   .eq("round_id", round.id)
-    //   .eq("user_id", me.user_id);
+      if (!me.dealer) {
+        await supabase
+          .from("round_users")
+          .update({
+            current: true,
+          })
+          .eq("round_id", get().state.currentRound?.id!)
+          .eq("user_id", nextPlayer.user_id);
+      }
 
-    useRoundStore.getState().fetchCurrentPlayer();
+      await supabase
+        .from("round_users")
+        .update({
+          current: false,
+        })
+        .eq("round_id", get().state.currentRound?.id!)
+        .eq("user_id", me.user_id);
+
+      useRoundStore.getState().fetchCurrentPlayer();
+    }
   },
 }));
