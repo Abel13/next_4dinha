@@ -43,7 +43,7 @@ export const useRoundStore = create<IRoundStore>((set, get) => ({
 
   getMyCards: async (currentRound, me) => {
     let cards: RoundUserCard[];
-    if (currentRound.number === 1) {
+    if (currentRound.number === 1 && currentRound.status === "bet") {
       cards = [
         {
           card: 0,
@@ -54,14 +54,24 @@ export const useRoundStore = create<IRoundStore>((set, get) => ({
         },
       ];
     } else {
+      const turn = await get().fetchCurrentTurn(currentRound.id);
+
       const { data, error } = await supabase
         .from("round_user_cards")
         .select("*")
         .eq("round_id", currentRound.id)
         .eq("user_id", me.user_id);
 
+      const { data: played } = await supabase
+        .from("user_turn")
+        .select("*")
+        .eq("turn_id", turn?.id!)
+        .eq("user_id", me.user_id);
+
       if (data) {
-        cards = data;
+        cards = data.filter((hand) => {
+          return played?.find((p) => p.card === hand.card) === undefined;
+        });
       }
     }
 

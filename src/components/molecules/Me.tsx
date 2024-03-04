@@ -131,18 +131,26 @@ export default function Me({ me }: MeProps) {
   return (
     <div className="flex w-full flex-col border-t-2 rounded-md items-center justify-end p-1">
       <div className="flex h-20 gap-1 justify-around">
-        {Array.from(Array(currentRound || 1)).map((_, index) => {
-          return (
-            <CardItem
-              key={index}
-              card={getCard(myCards[index]?.card)}
-              turnDown={currentRound?.number === 1}
-              allowPlay={myTurn}
-              highlight={myTurn && currentRound?.status === "play"}
-              handlePlay={(card) => handlePlay(me, card)}
-            />
-          );
-        })}
+        {currentRound &&
+          Array.from(Array(currentRound)).map((_, index) => {
+            console.log(
+              "myCards",
+              myCards[index]?.card,
+              getCard(myCards[index]?.card)
+            );
+            if (!getCard(myCards[index]?.card)) return null;
+
+            return (
+              <CardItem
+                key={index}
+                card={getCard(myCards[index]?.card)}
+                turnDown={currentRound?.number === 1}
+                allowPlay={myTurn}
+                highlight={myTurn && currentRound?.status === "play"}
+                handlePlay={(card) => handlePlay(me, card)}
+              />
+            );
+          })}
       </div>
       <div className="flex w-full justify-between items-center">
         <div className="flex">
