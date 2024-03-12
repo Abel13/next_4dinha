@@ -4,7 +4,6 @@ import { Match } from "@/models/Match";
 import { useCallback, useEffect, useState } from "react";
 import MatchItem from "../molecules/MatchItem";
 import { useRouter } from "next/navigation";
-import { Button } from "../atoms/Button";
 
 export default function Matches({ matchList }: { matchList: Match[] }) {
   const router = useRouter();

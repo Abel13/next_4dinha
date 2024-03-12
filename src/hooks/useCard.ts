@@ -411,9 +411,35 @@ export default function useCard() {
     return cards;
   };
 
-  const getCard = (id?: number) => {
+  function getSequenceSymbol(trumpSymbol: CardSymbol) {
+    const keys = Object.keys(CardSymbol) as (keyof typeof CardSymbol)[];
+    const values = keys.map((key) => CardSymbol[key]);
+    const currentIndex = values.indexOf(trumpSymbol);
+    const proximoIndex = (currentIndex + 1) % values.length;
+    const sequenceSymbol = values[proximoIndex];
+    return sequenceSymbol;
+  }
+
+  function checkTrump(trumpId: number, card: Card) {
+    const trumpSymbol = cards.find((card) => card.id === trumpId)!.symbol;
+    const sequenceSymbol = getSequenceSymbol(trumpSymbol);
+
+    if (card.symbol === sequenceSymbol) {
+      return { ...card, isTrump: true, power: CardPower.Trump };
+    }
+    return card;
+  }
+
+  const getCard = (id?: number, trumpId?: number | null) => {
     if (id === undefined) return undefined;
-    return cards.find((card) => card.id === id);
+    const card = cards.find((card) => card.id === id);
+
+    if (card) {
+      if (!trumpId) return card;
+
+      return checkTrump(trumpId, card!);
+    }
+    return undefined;
   };
 
   return {

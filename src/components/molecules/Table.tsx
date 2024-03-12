@@ -21,6 +21,7 @@ export default function Table({ me }: { me: MatchUser }) {
 
   const {
     state: { tableCards, tableSits },
+    fetchTableCards,
   } = useEngineStore((store) => store);
 
   const { fillFirstRoundCards } = useRoundNumberOne();
@@ -28,8 +29,11 @@ export default function Table({ me }: { me: MatchUser }) {
 
   useEffect(() => {
     if (currentRound?.number === 1 && currentRound.status === "bet") {
-      fillFirstRoundCards(currentRound.id);
+      fillFirstRoundCards(currentRound);
+    } else if (currentRound?.status === "play") {
+      fetchTableCards(currentRound);
     }
+
     fetchCurrentPlayer();
     getBetCount(currentRound!);
   }, [currentRound]);
@@ -48,7 +52,7 @@ export default function Table({ me }: { me: MatchUser }) {
         (payload) => {
           setCurrentRound(payload.new as Round);
           if (payload.new.id === 1) {
-            fillFirstRoundCards(payload.new.id);
+            fillFirstRoundCards(payload.new as Round);
           }
           fetchCurrentPlayer();
         }
@@ -71,13 +75,11 @@ export default function Table({ me }: { me: MatchUser }) {
     fetchCurrentPlayer();
   }, []);
 
-  console.log("TABLE", tableCards);
-
   return (
     <div className="col-span-3 grid grid-cols-3 grid-rows-4 w-full h-full row-span-3 bg-stone-800 rounded-full border-2 border-stone-500">
       <div className="flex flex-1 rotate-180 justify-center items-end col-span-3">
         {tableCards[tableSits[3]?.user_id] ? (
-          <CardItem card={getCard(tableCards[tableSits[3].user_id])} />
+          <CardItem card={tableCards[tableSits[3].user_id]} />
         ) : (
           <div className="flex border border-gray-700 w-14 h-20 rounded items-center justify-center" />
         )}
@@ -85,7 +87,7 @@ export default function Table({ me }: { me: MatchUser }) {
       <div className="flex items-start justify-start">
         <div className="rotate-90 mx-1">
           {tableCards[tableSits[2]?.user_id] ? (
-            <CardItem card={getCard(tableCards[tableSits[2].user_id])} />
+            <CardItem card={tableCards[tableSits[2].user_id]} />
           ) : (
             <div className="flex border border-gray-700 w-14 h-20 rounded items-center justify-center" />
           )}
@@ -103,7 +105,7 @@ export default function Table({ me }: { me: MatchUser }) {
       <div className="flex items-start justify-end">
         <div className="-rotate-90 mx-1">
           {tableCards[tableSits[4]?.user_id] ? (
-            <CardItem card={getCard(tableCards[tableSits[4].user_id])} />
+            <CardItem card={tableCards[tableSits[4].user_id]} />
           ) : (
             <div className="flex border border-gray-700 w-14 h-20 rounded items-center justify-center" />
           )}
@@ -112,7 +114,7 @@ export default function Table({ me }: { me: MatchUser }) {
       <div className="flex items-end justify-start">
         <div className="rotate-90 mx-1">
           {tableCards[tableSits[1]?.user_id] ? (
-            <CardItem card={getCard(tableCards[tableSits[1].user_id])} />
+            <CardItem card={tableCards[tableSits[1].user_id]} />
           ) : (
             <div className="flex border border-gray-700 w-14 h-20 rounded items-center justify-center" />
           )}
@@ -122,7 +124,7 @@ export default function Table({ me }: { me: MatchUser }) {
       <div className="flex items-end justify-end">
         <div className="-rotate-90 mx-1 ">
           {tableCards[tableSits[5]?.user_id] ? (
-            <CardItem card={getCard(tableCards[tableSits[5].user_id])} />
+            <CardItem card={tableCards[tableSits[5].user_id]} />
           ) : (
             <div className="flex border border-gray-700 w-14 h-20 rounded items-center justify-center" />
           )}
@@ -130,9 +132,9 @@ export default function Table({ me }: { me: MatchUser }) {
       </div>
       <div />
       <div className="flex items-end justify-center">
-        {tableCards[tableSits[0]?.user_id] !== 0 ? (
+        {tableCards[tableSits[0]?.user_id]?.id !== 0 ? (
           <CardItem
-            card={getCard(tableCards[tableSits[0]?.user_id])}
+            card={tableCards[tableSits[0]?.user_id]}
             highlight={
               currentRound?.number === 1 && currentRound.status === "play"
             }

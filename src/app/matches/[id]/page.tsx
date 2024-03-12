@@ -4,6 +4,8 @@ import { cookies } from "next/headers";
 import Me from "@/components/molecules/Me";
 import { MatchUser } from "@/models/MatchUser";
 import TableSit from "@/components/molecules/TableSit";
+import Image from "next/image";
+import logo from "@/assets/logo.png";
 
 export default async function GamePage({ params }: { params: { id: string } }) {
   const supabase = createServerComponentClient({ cookies });
@@ -19,7 +21,23 @@ export default async function GamePage({ params }: { params: { id: string } }) {
     .maybeSingle<MatchUser>();
 
   if (!me) {
-    return <div>Usuário não encontrado</div>;
+    return (
+      <main className="flex min-h-screen flex-col items-center p-4">
+        <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-full sm:before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full sm:after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
+          <Image
+            className="relative"
+            src={logo}
+            alt="4dinha Logo"
+            width={180}
+            height={180}
+            priority
+          />
+        </div>
+        <h1 className="text-xs font-bold text-center">
+          Falha ao carregar a partida.
+        </h1>
+      </main>
+    );
   }
 
   return (

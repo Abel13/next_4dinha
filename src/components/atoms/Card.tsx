@@ -68,7 +68,7 @@ export default function CardItem({
           card.symbol
         }${symbol(card.suit)}`}</h1>
         {card.isTrump && (
-          <span aria-label="Trunfo" className="text-xs text-red-500">
+          <span aria-label="Trunfo" className="text-xs text-yellow-600">
             •
           </span>
         )}

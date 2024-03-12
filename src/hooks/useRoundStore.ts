@@ -9,6 +9,7 @@ import { RoundUserCard } from "@/models/RoundUserCard";
 import { Turn } from "@/models/Turn";
 import { UserTurn } from "@/models/UserTurn";
 import { Card } from "@/models/Card";
+import cardEngine from "@/hooks/useCard";
 
 interface IRoundStore {
   state: {
@@ -267,7 +268,6 @@ export const useRoundStore = create<IRoundStore>((set, get) => ({
           round_id: round.id,
         } as Turn;
 
-        console.log(currentTurn);
         set(() => ({
           state: {
             ...get().state,
@@ -290,43 +290,49 @@ export const useRoundStore = create<IRoundStore>((set, get) => ({
   },
   handlePlay: async (me, card) => {
     let cardId = card.id;
+    const currentRound = get().state.currentRound!;
 
     if (cardId === 0) {
       const { data: firstCard } = await supabase
         .from("round_user_cards")
         .select("card")
-        .eq("round_id", get().state.currentRound?.id!)
+        .eq("round_id", currentRound.id)
         .eq("user_id", me.user_id)
         .single();
 
       if (firstCard) cardId = firstCard?.card;
     }
 
-    const turn = await get().fetchCurrentTurn(get().state.currentRound?.id!)!;
+    const turn = await get().fetchCurrentTurn(currentRound.id)!;
+    const lastTurn = turn?.number === (currentRound.number! % 6 || 6);
+
     const userTurn: UserTurn = {
       card: cardId,
       turn_id: turn!.id,
       user_id: me.user_id,
     } as UserTurn;
-    const { data: newTurn } = await supabase
+    const { data: newUserTurn } = await supabase
       .from("user_turn")
       .insert(userTurn)
       .select("*");
 
-    if (newTurn) {
-      useEngineStore.getState().playCard(me, cardId);
+    if (newUserTurn) {
+      const playedCard = cardEngine().getCard(cardId, currentRound.trump)!;
+      useEngineStore.getState().playCard(me, playedCard);
 
       const nextPlayer = useEngineStore
         .getState()
         .getMatchUserByUserId(me.next_user!);
 
-      if (!me.dealer) {
+      if (me.dealer) {
+        await useEngineStore.getState().finishTurn(me, turn!, lastTurn);
+      } else {
         await supabase
           .from("round_users")
           .update({
             current: true,
           })
-          .eq("round_id", get().state.currentRound?.id!)
+          .eq("round_id", currentRound.id)
           .eq("user_id", nextPlayer.user_id);
       }
 
@@ -335,7 +341,7 @@ export const useRoundStore = create<IRoundStore>((set, get) => ({
         .update({
           current: false,
         })
-        .eq("round_id", get().state.currentRound?.id!)
+        .eq("round_id", currentRound.id)
         .eq("user_id", me.user_id);
 
       useRoundStore.getState().fetchCurrentPlayer();

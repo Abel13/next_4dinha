@@ -73,7 +73,7 @@ export default function Me({ me }: MeProps) {
           setCurrentPlayer(payload.new as RoundUser);
           getBetCount(currentRound!);
           fetchCurrentRound(me?.match_id!);
-          fetchTableCards(currentRound!.id);
+          fetchTableCards(currentRound!);
         }
       )
       .subscribe();
@@ -100,7 +100,6 @@ export default function Me({ me }: MeProps) {
   }, [currentRound]);
 
   useEffect(() => {
-    console.log("playerBets", playerBets[me!.user_id]);
     if (me && playerBets[me.user_id] !== null && myTurn) {
       fetchCurrentTurn(currentRound!.id);
     }
@@ -133,19 +132,14 @@ export default function Me({ me }: MeProps) {
       <div className="flex h-20 gap-1 justify-around">
         {currentRound &&
           Array.from(Array(currentRound)).map((_, index) => {
-            console.log(
-              "myCards",
-              myCards[index]?.card,
-              getCard(myCards[index]?.card)
-            );
             if (!getCard(myCards[index]?.card)) return null;
 
             return (
               <CardItem
                 key={index}
-                card={getCard(myCards[index]?.card)}
+                card={getCard(myCards[index]?.card, currentRound?.trump)}
                 turnDown={currentRound?.number === 1}
-                allowPlay={myTurn}
+                allowPlay={myTurn && currentRound?.status === "play"}
                 highlight={myTurn && currentRound?.status === "play"}
                 handlePlay={(card) => handlePlay(me, card)}
               />

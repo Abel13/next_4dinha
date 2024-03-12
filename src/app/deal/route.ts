@@ -1,5 +1,5 @@
 import Cards from "@/hooks/useCard";
-import { Card, CardPower, CardSymbol } from "@/models/Card";
+import { Card, CardSymbol } from "@/models/Card";
 import { RoundUserCard } from "@/models/RoundUserCard";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
@@ -55,8 +55,6 @@ async function setTrump(roundUsers: any, shuffledCards: Card[]) {
   const supabase = createServerComponentClient({ cookies });
   const trump = shuffledCards.shift();
 
-  shuffledCards = updateTrumps(trump, shuffledCards);
-
   await supabase
     .from("rounds")
     .update({ trump: trump!.id })
@@ -65,31 +63,10 @@ async function setTrump(roundUsers: any, shuffledCards: Card[]) {
   return { shuffledCards };
 }
 
-function updateTrumps(trump: Card | undefined, shuffledCards: Card[]) {
-  const trumpSymbol = trump!.symbol;
-  const sequenceSymbol = getSequenceSymbol(trumpSymbol);
-  shuffledCards = shuffledCards.map((card) => {
-    if (card.symbol === sequenceSymbol) {
-      return { ...card, isTrump: true, power: CardPower.Trump };
-    }
-    return card;
-  });
-  return shuffledCards;
-}
-
 function getShuffledCards() {
   return Cards()
     .shuffledCards()
     .filter((card) => card.symbol !== CardSymbol.Eight)
     .filter((card) => card.symbol !== CardSymbol.Nine)
     .filter((card) => card.symbol !== CardSymbol.Ten);
-}
-
-function getSequenceSymbol(trumpSymbol: CardSymbol) {
-  const keys = Object.keys(CardSymbol) as (keyof typeof CardSymbol)[];
-  const values = keys.map((key) => CardSymbol[key]);
-  const currentIndex = values.indexOf(trumpSymbol);
-  const proximoIndex = (currentIndex + 1) % values.length;
-  const sequenceSymbol = values[proximoIndex];
-  return sequenceSymbol;
 }

@@ -4,20 +4,24 @@ import { Round } from "@/models/Round";
 import { UserTurn } from "@/models/UserTurn";
 import { create } from "zustand";
 import { useRoundStore } from "./useRoundStore";
+import { Card } from "@/models/Card";
+import useCard from "@/hooks/useCard";
+import { Turn } from "@/models/Turn";
 
 export interface IEngineStore {
   state: {
     tableSits: MatchUser[];
-    tableCards: { [key: string]: number };
+    tableCards: { [key: string]: Card };
     matchUsers: MatchUser[];
   };
   fetchMatchUsers: (matchId: string) => void;
-  fetchTableCards: (roundId: string) => Promise<void>;
+  fetchTableCards: (round: Round) => Promise<void>;
   getMatchUserByUserId: (id: string) => MatchUser;
   fillSits: (me: MatchUser) => void;
   handleBet: (round: Round, me: MatchUser, bet: number) => void;
-  setTableCards: (cards: { [playerId: string]: number }) => void;
-  playCard: (me: MatchUser, cardId: number) => void;
+  setTableCards: (cards: { [playerId: string]: Card }) => void;
+  playCard: (me: MatchUser, card: Card) => void;
+  finishTurn: (me: MatchUser, turn: Turn, lastTurn: boolean) => void;
 }
 
 export const useEngineStore = create<IEngineStore>((set, get) => ({
@@ -105,10 +109,10 @@ export const useEngineStore = create<IEngineStore>((set, get) => ({
       },
     });
   },
-  playCard: (me, cardId) => {
+  playCard: (me, card) => {
     const cards = {
       ...get().state.tableCards,
-      [me.user_id]: cardId,
+      [me.user_id]: card,
     };
 
     set({
@@ -118,10 +122,10 @@ export const useEngineStore = create<IEngineStore>((set, get) => ({
       },
     });
   },
-  fetchTableCards: async (roundId) => {
+  fetchTableCards: async (round) => {
     const currentTurn = await useRoundStore
       .getState()
-      .fetchCurrentTurn(roundId)!;
+      .fetchCurrentTurn(round.id)!;
     if (!currentTurn) {
       return;
     }
@@ -130,11 +134,10 @@ export const useEngineStore = create<IEngineStore>((set, get) => ({
       .select("*")
       .eq("turn_id", currentTurn.id!);
 
-    console.log("tableCards", tableCards);
     if (tableCards) {
       let cards = get().state.tableCards;
       tableCards.forEach((element: UserTurn) => {
-        cards[element.user_id] = element.card;
+        cards[element.user_id] = useCard().getCard(element.card, round.trump)!;
       });
 
       set({
@@ -143,6 +146,72 @@ export const useEngineStore = create<IEngineStore>((set, get) => ({
           tableCards: cards,
         },
       });
+    }
+  },
+  finishTurn: async (me, turn, lastTurn) => {
+    const matchUsers = get().state.matchUsers;
+    const tableCards = get().state.tableCards;
+
+    console.log(tableCards);
+
+    const winner = Object.keys(tableCards).reduce((a, b) =>
+      tableCards[a].power > tableCards[b].power ? a : b
+    );
+
+    console.log("winner", winner);
+    await supabase.from("turns").update({ winner }).eq("id", turn.id);
+
+    const { data: winnerScore } = await supabase
+      .from("round_users")
+      .select("round_score")
+      .eq("user_id", winner)
+      .eq("round_id", turn.round_id)
+      .single();
+
+    await supabase
+      .from("round_users")
+      .update({ round_score: winnerScore!.round_score + 1 })
+      .eq("user_id", winner)
+      .eq("round_id", turn.round_id);
+
+    if (lastTurn) {
+      const { data } = await supabase
+        .from("round_users")
+        .select("user_id, round_score, bet")
+        .eq("round_id", turn.round_id);
+
+      const score = data?.map((user) => {
+        return {
+          user_id: user.user_id,
+          score: Math.abs(user.round_score - user.bet!),
+        };
+      });
+
+      console.log("SCORE", score);
+
+      let calls: PromiseLike<any>[] =
+        score?.map((user) => {
+          const matchUser = matchUsers.find((u) => u.user_id === user.user_id);
+
+          const lives = matchUser!.lives - user.score;
+          return supabase
+            .from("match_users")
+            .update({ lives, dealer: me.next_user === user.user_id })
+            .eq("user_id", user.user_id)
+            .eq("match_id", me.match_id)
+            .then((data) => {
+              console.log("data", data);
+            });
+        }) || [];
+
+      console.log("start calls");
+      await Promise.all(calls);
+      console.log("response from all calls");
+
+      await supabase
+        .from("rounds")
+        .update({ status: "finished" })
+        .eq("id", turn.round_id);
     }
   },
 }));

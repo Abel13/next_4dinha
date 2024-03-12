@@ -14,7 +14,6 @@ export default function Page({ params }: { params: { id: string } }) {
       .eq("match_id", params.id);
 
     if (data) {
-      console.log(data);
       const progress =
         (data?.filter((user) => user.next_user).length / data?.length) * 100;
 
@@ -23,7 +22,6 @@ export default function Page({ params }: { params: { id: string } }) {
   }, [params.id]);
 
   useEffect(() => {
-    console.log(progress);
     if (progress === "100%") {
       router.replace(`/matches/${params.id}`);
     }

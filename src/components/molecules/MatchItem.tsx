@@ -10,7 +10,7 @@ export default function MatchItem({
 }) {
   return (
     <div className="flex border p-2 justify-between items-center rounded">
-      <span>{match.name}</span>
+      <span className="truncate text-xs">{match.name}</span>
       <Button onClick={onClickEnter}>Entrar</Button>
     </div>
   );
