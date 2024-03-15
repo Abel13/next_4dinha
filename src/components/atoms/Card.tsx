@@ -62,7 +62,18 @@ export default function CardItem({
     );
 
   return (
-    <div className="relative w-14 h-20 bg-zinc-100 rounded-lg shadow-md flex flex-col justify-between p-1 ">
+    <div
+      onClick={() => {
+        if (!allowPlay) setEffect(true);
+        else handlePlay && handlePlay(card);
+      }}
+      onAnimationEnd={() => setEffect(false)}
+      className={`${
+        effect && "animate-wiggle"
+      } relative w-14 h-20 bg-zinc-100 rounded-lg shadow-md flex flex-col justify-between p-1 cursor-pointer ${
+        highlight && "border-2 border-green-500"
+      }`}
+    >
       <div className="flex justify-between">
         <h1 className={`text-xs font-bold ${suitColor(card.suit)}`}>{`${
           card.symbol

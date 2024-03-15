@@ -131,8 +131,8 @@ export default function Me({ me }: MeProps) {
     <div className="flex w-full flex-col border-t-2 rounded-md items-center justify-end p-1">
       <div className="flex h-20 gap-1 justify-around">
         {currentRound &&
-          Array.from(Array(currentRound)).map((_, index) => {
-            if (!getCard(myCards[index]?.card)) return null;
+          Array.from(Array(currentRound.number)).map((_, index) => {
+            if (!myCards) return null;
 
             return (
               <CardItem

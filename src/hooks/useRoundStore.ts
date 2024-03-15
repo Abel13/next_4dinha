@@ -43,7 +43,7 @@ export const useRoundStore = create<IRoundStore>((set, get) => ({
   },
 
   getMyCards: async (currentRound, me) => {
-    let cards: RoundUserCard[];
+    let cards: RoundUserCard[] = [];
     if (currentRound.number === 1 && currentRound.status === "bet") {
       cards = [
         {
@@ -63,16 +63,19 @@ export const useRoundStore = create<IRoundStore>((set, get) => ({
         .eq("round_id", currentRound.id)
         .eq("user_id", me.user_id);
 
-      const { data: played } = await supabase
-        .from("user_turn")
-        .select("*")
-        .eq("turn_id", turn?.id!)
-        .eq("user_id", me.user_id);
+      const { data: roundTurns } = await supabase
+        .from("turns")
+        .select("*, user_turn(*)")
+        .eq("round_id", turn?.round_id!);
 
       if (data) {
-        cards = data.filter((hand) => {
-          return played?.find((p) => p.card === hand.card) === undefined;
-        });
+        cards = roundTurns
+          ? data?.filter((hand) => {
+              return !roundTurns.some((turn) =>
+                turn.user_turn.find((played) => hand.card === played.card)
+              );
+            })
+          : data;
       }
     }
 
@@ -304,6 +307,12 @@ export const useRoundStore = create<IRoundStore>((set, get) => ({
     }
 
     const turn = await get().fetchCurrentTurn(currentRound.id)!;
+    const { data: previousTurn } = await supabase
+      .from("turns")
+      .select("winner")
+      .eq("round_id", currentRound.id)
+      .eq("number", turn?.number! - 1)
+      .maybeSingle();
     const lastTurn = turn?.number === (currentRound.number! % 6 || 6);
 
     const userTurn: UserTurn = {
@@ -315,6 +324,7 @@ export const useRoundStore = create<IRoundStore>((set, get) => ({
       .from("user_turn")
       .insert(userTurn)
       .select("*");
+    get().getMyCards(currentRound, me);
 
     if (newUserTurn) {
       const playedCard = cardEngine().getCard(cardId, currentRound.trump)!;
@@ -324,7 +334,10 @@ export const useRoundStore = create<IRoundStore>((set, get) => ({
         .getState()
         .getMatchUserByUserId(me.next_user!);
 
-      if (me.dealer) {
+      if (
+        (turn?.number === 1 && me.dealer) ||
+        (turn?.number! > 1 && me.user_id === previousTurn?.winner)
+      ) {
         await useEngineStore.getState().finishTurn(me, turn!, lastTurn);
       } else {
         await supabase

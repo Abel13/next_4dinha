@@ -153,6 +153,16 @@ export const useEngineStore = create<IEngineStore>((set, get) => ({
     const tableCards = get().state.tableCards;
 
     console.log(tableCards);
+    const getLives = ({
+      user_id,
+      score,
+    }: {
+      user_id: string;
+      score: number;
+    }) => {
+      const user = matchUsers.find((user) => user.user_id === user_id);
+      return user!.lives - score;
+    };
 
     const winner = Object.keys(tableCards).reduce((a, b) =>
       tableCards[a].power > tableCards[b].power ? a : b
@@ -170,7 +180,7 @@ export const useEngineStore = create<IEngineStore>((set, get) => ({
 
     await supabase
       .from("round_users")
-      .update({ round_score: winnerScore!.round_score + 1 })
+      .update({ round_score: winnerScore!.round_score + 1, current: !lastTurn })
       .eq("user_id", winner)
       .eq("round_id", turn.round_id);
 
@@ -187,31 +197,34 @@ export const useEngineStore = create<IEngineStore>((set, get) => ({
         };
       });
 
-      console.log("SCORE", score);
+      const playersScore: MatchUser[] = [];
+      score?.forEach((user) => {
+        if (user)
+          playersScore.push({
+            user_id: user.user_id,
+            match_id: me.match_id,
+            lives: getLives(user),
+            dealer: me.next_user === user.user_id,
+          } as MatchUser);
+      });
+      const { data: updateScoreData, error } = await supabase
+        .from("match_users")
+        .upsert(playersScore, {
+          ignoreDuplicates: false,
+        })
+        .select();
 
-      let calls: PromiseLike<any>[] =
-        score?.map((user) => {
-          const matchUser = matchUsers.find((u) => u.user_id === user.user_id);
-
-          const lives = matchUser!.lives - user.score;
-          return supabase
-            .from("match_users")
-            .update({ lives, dealer: me.next_user === user.user_id })
-            .eq("user_id", user.user_id)
-            .eq("match_id", me.match_id)
-            .then((data) => {
-              console.log("data", data);
-            });
-        }) || [];
-
-      console.log("start calls");
-      await Promise.all(calls);
-      console.log("response from all calls");
+      console.log("DONE", updateScoreData);
 
       await supabase
         .from("rounds")
         .update({ status: "finished" })
         .eq("id", turn.round_id);
+    } else {
+      await supabase
+        .from("turns")
+        .insert({ round_id: turn.round_id, number: turn.number + 1 })
+        .select();
     }
   },
 }));

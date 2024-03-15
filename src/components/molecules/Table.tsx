@@ -6,13 +6,12 @@ import { supabase } from "@/config/supabase";
 import { Round } from "@/models/Round";
 import useCard from "@/hooks/useCard";
 import { useRoundStore } from "@/hooks/useRoundStore";
-import useRoundNumberOne from "@/hooks/useTurn";
+import useRoundNumberOne from "@/hooks/useRoundNumberOne";
 import { useEngineStore } from "@/hooks/useEngineStore";
 
 export default function Table({ me }: { me: MatchUser }) {
   const {
     setCurrentRound,
-    setCurrentPlayer,
     getBetCount,
     fetchCurrentRound,
     fetchCurrentPlayer,
