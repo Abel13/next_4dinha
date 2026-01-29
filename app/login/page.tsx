@@ -63,7 +63,7 @@ function LoginForm() {
       const { error: signInError } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${baseUrl}/api/auth/callback?next=${encodeURIComponent(redirectTo)}`,
+          redirectTo: `${baseUrl}/api/auth/callback?next=${baseUrl}${encodeURIComponent(redirectTo)}`,
           queryParams: {
             access_type: "offline",
             prompt: "consent",
@@ -171,7 +171,6 @@ function LoginForm() {
                 )}
               </button>
             </div>
-            {process.env.NEXT_PUBLIC_SITE_URL}
             <div className="mt-6 border-t border-[#2AFAFD22] pt-6 space-y-3">
               {hasSession && (
                 <button
