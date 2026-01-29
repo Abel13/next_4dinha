@@ -108,13 +108,11 @@ function LoginForm() {
             <p className="mt-2 text-sm text-[#A2A3AA]">
               Escolha uma forma de autenticação para continuar
             </p>
-
             {error && (
               <div className="mt-4 rounded-lg border border-[#ef5350] bg-[#1a4e89EE]/10 px-4 py-3 text-sm text-[#ef5350]">
                 {error}
               </div>
             )}
-
             <div className="mt-6 space-y-3">
               <button
                 onClick={() => handleOAuthLogin("google")}
@@ -173,7 +171,7 @@ function LoginForm() {
                 )}
               </button>
             </div>
-
+            {process.env.NEXT_PUBLIC_SITE_URL}
             <div className="mt-6 border-t border-[#2AFAFD22] pt-6 space-y-3">
               {hasSession && (
                 <button
