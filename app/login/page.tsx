@@ -46,6 +46,10 @@ function LoginForm() {
   };
 
   const handleOAuthLogin = async (provider: "google" | "apple") => {
+    if (!process.env.NEXT_PUBLIC_SITE_URL) {
+      throw new Error("NEXT_PUBLIC_SITE_URL não definido");
+    }
+
     try {
       setLoading(provider);
       setError(null);
