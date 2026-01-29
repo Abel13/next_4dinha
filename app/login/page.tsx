@@ -53,10 +53,13 @@ function LoginForm() {
       const supabase = createClient();
       // Fazer logout completo antes de tentar login para garantir nova conta
       await supabase.auth.signOut();
+      const baseUrl =
+        process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+
       const { error: signInError } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/api/auth/callback?next=${encodeURIComponent(redirectTo)}`,
+          redirectTo: `${baseUrl}/api/auth/callback?next=${encodeURIComponent(redirectTo)}`,
           queryParams: {
             access_type: "offline",
             prompt: "consent",
@@ -174,7 +177,9 @@ function LoginForm() {
                   disabled={loading === "logout"}
                   className="w-full text-center text-sm text-[#A2A3AA] transition hover:text-[#2AFAFD] disabled:opacity-50"
                 >
-                  {loading === "logout" ? "Saindo..." : "Limpar sessão e criar nova conta"}
+                  {loading === "logout"
+                    ? "Saindo..."
+                    : "Limpar sessão e criar nova conta"}
                 </button>
               )}
               <Link
@@ -193,13 +198,15 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <main className="min-h-screen bg-[#021223] text-[#2AFAFD] flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-xl text-[#2AFAFD]">Carregando...</div>
-        </div>
-      </main>
-    }>
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-[#021223] text-[#2AFAFD] flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-xl text-[#2AFAFD]">Carregando...</div>
+          </div>
+        </main>
+      }
+    >
       <LoginForm />
     </Suspense>
   );
