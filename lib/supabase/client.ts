@@ -40,5 +40,5 @@ export function createClient(): SupabaseClient<Database> {
     throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_ANON_KEY')
   }
 
-  return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey)
+  return createBrowserClient(supabaseUrl, supabaseAnonKey) as unknown as SupabaseClient<Database>
 }

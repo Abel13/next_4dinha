@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
           // Buscar perfil recém-criado
           const { data: newProfile } = await supabase
             .from('profiles')
-            .select('username')
+            .select('id, username')
             .eq('id', user.id)
             .single()
           profile = newProfile

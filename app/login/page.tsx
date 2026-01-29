@@ -4,9 +4,9 @@ import { createClient } from "@/lib/supabase/client";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 
-export default function LoginPage() {
+function LoginForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
@@ -168,6 +168,15 @@ export default function LoginPage() {
             </div>
 
             <div className="mt-6 border-t border-[#2AFAFD22] pt-6 space-y-3">
+              {hasSession && (
+                <button
+                  onClick={handleLogout}
+                  disabled={loading === "logout"}
+                  className="w-full text-center text-sm text-[#A2A3AA] transition hover:text-[#2AFAFD] disabled:opacity-50"
+                >
+                  {loading === "logout" ? "Saindo..." : "Limpar sessão e criar nova conta"}
+                </button>
+              )}
               <Link
                 href="/"
                 className="block text-center text-sm text-[#A2A3AA] transition hover:text-[#2AFAFD]"
@@ -179,5 +188,19 @@ export default function LoginPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-[#021223] text-[#2AFAFD] flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-xl text-[#2AFAFD]">Carregando...</div>
+        </div>
+      </main>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }

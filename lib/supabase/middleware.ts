@@ -46,13 +46,13 @@ export function createClient(request: NextRequest): SupabaseClient<Database> {
     },
   })
 
-  const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
+  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll() {
         return request.cookies.getAll()
       },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value, options }) =>
+      setAll(cookiesToSet: Array<{ name: string; value: string; options?: Record<string, unknown> }>) {
+        cookiesToSet.forEach(({ name, value }) =>
           request.cookies.set(name, value)
         )
         response = NextResponse.next({
@@ -65,7 +65,7 @@ export function createClient(request: NextRequest): SupabaseClient<Database> {
         )
       },
     },
-  })
+  }) as unknown as SupabaseClient<Database>
 
   return supabase
 }
