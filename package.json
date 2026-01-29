@@ -6,11 +6,24 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:status": "supabase status",
+    "supabase:reset": "supabase stop && supabase db reset",
+    "supabase:init": "supabase init",
+    "supabase:link": "supabase link",
+    "supabase:db:pull": "supabase db pull",
+    "supabase:db:reset": "supabase db reset",
+    "supabase:storage:pull": "supabase storage pull",
+    "supabase:functions:pull": "supabase functions pull",
+    "supabase:sync": "npm run supabase:db:pull && npm run supabase:storage:pull && npm run supabase:functions:pull"
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.0",
     "next": "16.0.10",
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.47.10",
     "react": "19.2.0",
     "react-dom": "19.2.0"
   },
@@ -21,6 +34,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.0.3",
+    "supabase": "^2.72.7",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
